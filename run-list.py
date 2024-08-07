@@ -1,7 +1,9 @@
 import os
 
 import xml.etree.ElementTree as ET
+from xml.dom import minidom
 from tkinter import Tk, filedialog
+
 
 def add_footer(root):
     # Add footer devices
@@ -13,7 +15,8 @@ def add_footer(root):
 
 def get_run_number(directory):
     for filename in os.listdir(directory):
-        if filename.endswith(".tcn"):
+        #this should be case insensitive
+        if filename.lower().endswith(".tcn"):
             run_number = int(filename[1:3])
             return run_number
         
@@ -27,7 +30,7 @@ def generate_xlmst_file(directory):
     if not run_number:
         return
     
-    output_filename = f"RUN_{run_number:02}.xmlst"
+    output_filename = os.path.join(directory, f"RUN_{run_number:02}.xmlst")
     
     root = ET.Element('List')
 
@@ -37,7 +40,7 @@ def generate_xlmst_file(directory):
     # Iterate over files in the specified directory
     for filename in os.listdir(directory):
         print(f"Processing: {filename}")
-        if filename.endswith(".tcn"):  # Adjust the condition if you need a different file type
+        if filename.lower().endswith(".tcn"):
             row = ET.SubElement(rows, 'Row', Index="1", SavedID="3", FileName=filename)
 
             # Add cells
@@ -48,7 +51,7 @@ def generate_xlmst_file(directory):
             ET.SubElement(row, 'Cell', Name="EXECUTED", DataType="288").text = "0"
 
             # Check if filename ends with 'Z' to change the FIELD value
-            if filename.endswith('Z.tcn'):
+            if filename.lower().endswith('z.tcn'):
                 field_value = '0'
             else:
                 field_value = '6'
@@ -70,10 +73,18 @@ def generate_xlmst_file(directory):
 
     add_footer(root)
 
-    # Write to a file
-    tree = ET.ElementTree(root)
-    tree.write(output_filename, encoding='utf-8', xml_declaration=True)
+     # Convert the ElementTree to a string and pretty-print it
+    xml_str = ET.tostring(root, encoding='utf-8')
+    parsed_xml = minidom.parseString(xml_str)
+    pretty_xml_str = parsed_xml.toprettyxml(indent="  ")
+
+    # Write the pretty XML to a file in the selected directory
+    with open(output_filename, "w", encoding="utf-8") as f:
+        f.write(pretty_xml_str)
+
     print(f"Generated file: {output_filename}")
+
+    
 
 def select_directory():
     root = Tk()
