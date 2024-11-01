@@ -1,9 +1,6 @@
-# Updates - L/H/Thickness from each file, indicies need to increment, error if not all the same number
+# Updates - L/H/Thickness from each file, indicies need to increment, error if not all the same
 
 # 3rd line has l/w/thickness
-
-# dont worry about multiple run numbers
-# name the file on the spot instead of after the run number
 
 import os
 
@@ -19,28 +16,7 @@ def add_footer(root):
     
     devices.find('.//Dev[@id="99"]').set('value', '1')
 
-# This can throw an error
-def get_run_number(directory):
-    run_numbers = set()  # To store unique run numbers
-    
-    for filename in os.listdir(directory):
-        if filename.lower().endswith(".tcn"):
-            run_number = int(filename[1:3])
-            run_numbers.add(run_number)
-    
-    if not run_numbers:
-        raise ValueError("No .tcn files found in the specified directory.")
-    
-    if len(run_numbers) > 1:
-        raise ValueError(f"Multiple run numbers found: {run_numbers}")
-    
-    # Return the single run number if only one is found
-    return run_numbers.pop()
-
 def generate_xlmst_file(directory):
-    run_number = get_run_number(directory)
-    print(f"Run Number: {run_number}")
-    
     filename_input = input("Enter a filename for the output (without extension): ")
     output_filename = os.path.normpath(os.path.join(directory, f"{filename_input}.xmlst"))
 
@@ -49,7 +25,7 @@ def generate_xlmst_file(directory):
     root = ET.Element('List')
 
         # Create the Rows element with the specified attributes
-    rows = ET.SubElement(root, 'Rows', Name=output_filename, Repetitions="1", TL="0", TH="0", TS="0", Criterion="", ThicknessSpoilBoardLeft="15.5", ThicknessSpoilBoardRight="19", ThicknessPodsOnSpoilBoard="150", EnabledSpoilBoardLeft="1", EnabledSpoilBoardRight="1")
+    rows = ET.SubElement(root, 'Rows', Name=filename_input, Repetitions="1", TL="0", TH="0", TS="0", Criterion="", ThicknessSpoilBoardLeft="15.5", ThicknessSpoilBoardRight="19", ThicknessPodsOnSpoilBoard="54", EnabledSpoilBoardLeft="1", EnabledSpoilBoardRight="1")
     index = 1
 
     # Iterate over files in the specified directory
@@ -58,21 +34,25 @@ def generate_xlmst_file(directory):
         if filename.lower().endswith(".tcn"):
             # // update the index
             normalized_filename = os.path.normpath(os.path.join(directory, filename))
-            row = ET.SubElement(rows, 'Row', Index=str(index), SavedID="3", FileName=normalized_filename)
+            # print the original and normalized filename
+            print(f"Original: {filename}")
+            print(f"Normalized: {normalized_filename}")
+
+            row = ET.SubElement(rows, 'Row', Index=str(index), SavedID="13", FileName=normalized_filename)
             index += 1
 
             # Add cells
             ET.SubElement(row, 'Cell', Name="DRAW", DataType="281").text = "1"
             ET.SubElement(row, 'Cell', Name="ESEC", DataType="165").text = "1"
-            ET.SubElement(row, 'Cell', Name="NAME", DataType="161").text = os.path.join(directory, filename)
+            ET.SubElement(row, 'Cell', Name="NAME", DataType="161").text = normalized_filename
             ET.SubElement(row, 'Cell', Name="REPETITIONS", DataType="164").text = "1"
             ET.SubElement(row, 'Cell', Name="EXECUTED", DataType="288").text = "0"
 
             # Check if filename ends with 'Z' to change the FIELD value
             if filename.lower().endswith('z.tcn'):
-                field_value = '0'
+                field_value = '1'
             else:
-                field_value = '6'
+                field_value = '7'
 
             ET.SubElement(row, 'Cell', Name="FIELD", DataType="171").text = field_value
             ET.SubElement(row, 'Cell', Name="ROTATION", DataType="286").text = "1"
@@ -81,18 +61,19 @@ def generate_xlmst_file(directory):
             
             # genrerate from the inside of each file
             # L/H/Width or thickness is S 
-            ET.SubElement(row, 'Cell', Name="LENGTH", DataType="168").text = "520"
-            ET.SubElement(row, 'Cell', Name="HEIGHT", DataType="169").text = "166"
-            ET.SubElement(row, 'Cell', Name="THICKNESS", DataType="170").text = "43.517"
+            ET.SubElement(row, 'Cell', Name="LENGTH", DataType="168").text = "2451.1"
+            ET.SubElement(row, 'Cell', Name="HEIGHT", DataType="169").text = "1231.9"
+            ET.SubElement(row, 'Cell', Name="THICKNESS", DataType="170").text = "18.5"
             
             ET.SubElement(row, 'Cell', Name="COMMENT", DataType="162").text = ""
             ET.SubElement(row, 'Cell', Name="UNIT", DataType="163").text = "1"
-            ET.SubElement(row, 'Cell', Name="HOOK", DataType="282").text = "1"
-            ET.SubElement(row, 'Cell', Name="TIME", DataType="223").text = "00:09:08"
+            ET.SubElement(row, 'Cell', Name="HOOK", DataType="282").text = "0"
+            ET.SubElement(row, 'Cell', Name="TIME", DataType="223").text = "00:00:00"
             ET.SubElement(row, 'Cell', Name="OFFSET X", DataType="277").text = "0"
             ET.SubElement(row, 'Cell', Name="OFFSET Y", DataType="278").text = "0"
             ET.SubElement(row, 'Cell', Name="OFFSET Z", DataType="279").text = "0"
 
+    ET.SubElement(root, 'Bench', Row="0")
     add_footer(root)
 
      # Convert the ElementTree to a string and pretty-print it
