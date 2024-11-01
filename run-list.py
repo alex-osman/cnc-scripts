@@ -7,7 +7,22 @@ import os
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
 from tkinter import Tk, filedialog
+import re
 
+
+def extract_dimensions_from_file(filepath):
+    with open(filepath, 'r') as file:
+        for line in file:
+            if "::UNm" in line:
+                # Use regex to find DL, DH, and DS values
+                match = re.search(r'DL=([\d.]+)\s+DH=([\d.]+)\s+DS=([\d.]+)', line)
+                if match:
+                    length = match.group(1)
+                    height = match.group(2)
+                    thickness = match.group(3)
+                    return length, height, thickness
+    # Return None if the line is not found
+    return None, None, None
 
 def add_footer(root):
     devices = ET.SubElement(root, 'Devices')
@@ -29,17 +44,19 @@ def generate_xlmst_file(directory):
     index = 1
 
     # Iterate over files in the specified directory
-    for filename in os.listdir(directory):
-        print(f"Processing: {filename}")
+    for filename in sorted(os.listdir(directory)):
         if filename.lower().endswith(".tcn"):
+            print(f"Processing: {filename}")
             # // update the index
             normalized_filename = os.path.normpath(os.path.join(directory, filename))
-            # print the original and normalized filename
-            print(f"Original: {filename}")
-            print(f"Normalized: {normalized_filename}")
 
             row = ET.SubElement(rows, 'Row', Index=str(index), SavedID="13", FileName=normalized_filename)
             index += 1
+
+            length, height, thickness = extract_dimensions_from_file(normalized_filename)
+            if not length or not height or not thickness:
+                print(f"Error: Could not extract dimensions from {filename}. Skipping file.")
+                continue
 
             # Add cells
             ET.SubElement(row, 'Cell', Name="DRAW", DataType="281").text = "1"
@@ -61,9 +78,9 @@ def generate_xlmst_file(directory):
             
             # genrerate from the inside of each file
             # L/H/Width or thickness is S 
-            ET.SubElement(row, 'Cell', Name="LENGTH", DataType="168").text = "2451.1"
-            ET.SubElement(row, 'Cell', Name="HEIGHT", DataType="169").text = "1231.9"
-            ET.SubElement(row, 'Cell', Name="THICKNESS", DataType="170").text = "18.5"
+            ET.SubElement(row, 'Cell', Name="LENGTH", DataType="168").text = length
+            ET.SubElement(row, 'Cell', Name="HEIGHT", DataType="169").text = height
+            ET.SubElement(row, 'Cell', Name="THICKNESS", DataType="170").text = thickness
             
             ET.SubElement(row, 'Cell', Name="COMMENT", DataType="162").text = ""
             ET.SubElement(row, 'Cell', Name="UNIT", DataType="163").text = "1"
