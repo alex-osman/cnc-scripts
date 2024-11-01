@@ -41,7 +41,8 @@ def generate_xlmst_file(directory):
     run_number = get_run_number(directory)
     print(f"Run Number: {run_number}")
     
-    output_filename = os.path.normpath(os.path.join(directory, f"RUN_{run_number:02}.xmlst"))
+    filename_input = input("Enter a filename for the output (without extension): ")
+    output_filename = os.path.normpath(os.path.join(directory, f"{filename_input}.xmlst"))
 
     print(f"Output File: {output_filename}")
     
@@ -56,7 +57,8 @@ def generate_xlmst_file(directory):
         print(f"Processing: {filename}")
         if filename.lower().endswith(".tcn"):
             # // update the index
-            row = ET.SubElement(rows, 'Row', Index=str(index), SavedID="3", FileName=filename)
+            normalized_filename = os.path.normpath(os.path.join(directory, filename))
+            row = ET.SubElement(rows, 'Row', Index=str(index), SavedID="3", FileName=normalized_filename)
             index += 1
 
             # Add cells
@@ -87,8 +89,8 @@ def generate_xlmst_file(directory):
             ET.SubElement(row, 'Cell', Name="UNIT", DataType="163").text = "1"
             ET.SubElement(row, 'Cell', Name="HOOK", DataType="282").text = "1"
             ET.SubElement(row, 'Cell', Name="TIME", DataType="223").text = "00:09:08"
-            ET.SubElement(row, 'Cell', Name="OFFSET X", DataType="277").text = "6"
-            ET.SubElement(row, 'Cell', Name="OFFSET Y", DataType="278").text = "330"
+            ET.SubElement(row, 'Cell', Name="OFFSET X", DataType="277").text = "0"
+            ET.SubElement(row, 'Cell', Name="OFFSET Y", DataType="278").text = "0"
             ET.SubElement(row, 'Cell', Name="OFFSET Z", DataType="279").text = "0"
 
     add_footer(root)
