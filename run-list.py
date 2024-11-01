@@ -1,3 +1,5 @@
+# Updates - L/H/Thickness from each file, indicies need to increment, error if not all the same number
+
 import os
 
 import xml.etree.ElementTree as ET
@@ -6,16 +8,15 @@ from tkinter import Tk, filedialog
 
 
 def add_footer(root):
-    # Add footer devices
     devices = ET.SubElement(root, 'Devices')
     for dev_id in [88, 75, 114, 116, 101, 104, 102, 103, 99, 100, 76, 77]:
         ET.SubElement(devices, 'Dev', id=str(dev_id), value="0")
-    # Set specific device to 1 as per example
+    
     devices.find('.//Dev[@id="99"]').set('value', '1')
 
+# This can throw an error
 def get_run_number(directory):
     for filename in os.listdir(directory):
-        #this should be case insensitive
         if filename.lower().endswith(".tcn"):
             run_number = int(filename[1:3])
             return run_number
@@ -41,10 +42,11 @@ def generate_xlmst_file(directory):
     for filename in os.listdir(directory):
         print(f"Processing: {filename}")
         if filename.lower().endswith(".tcn"):
+            # // update the index
             row = ET.SubElement(rows, 'Row', Index="1", SavedID="3", FileName=filename)
 
             # Add cells
-            ET.SubElement(row, 'Cell', Name="DRAW", DataType="281").text = "0"
+            ET.SubElement(row, 'Cell', Name="DRAW", DataType="281").text = "1"
             ET.SubElement(row, 'Cell', Name="ESEC", DataType="165").text = "1"
             ET.SubElement(row, 'Cell', Name="NAME", DataType="161").text = os.path.join(directory, filename)
             ET.SubElement(row, 'Cell', Name="REPETITIONS", DataType="164").text = "1"
@@ -60,9 +62,13 @@ def generate_xlmst_file(directory):
             ET.SubElement(row, 'Cell', Name="ROTATION", DataType="286").text = "1"
             ET.SubElement(row, 'Cell', Name="MIRROR", DataType="284").text = "0"
             ET.SubElement(row, 'Cell', Name="HOOKOPTI", DataType="600").text = "0"
+            
+            # genrerate from the inside of each file
+            # L/H/Width or thickness is S 
             ET.SubElement(row, 'Cell', Name="LENGTH", DataType="168").text = "520"
             ET.SubElement(row, 'Cell', Name="HEIGHT", DataType="169").text = "166"
             ET.SubElement(row, 'Cell', Name="THICKNESS", DataType="170").text = "43.517"
+            
             ET.SubElement(row, 'Cell', Name="COMMENT", DataType="162").text = ""
             ET.SubElement(row, 'Cell', Name="UNIT", DataType="163").text = "1"
             ET.SubElement(row, 'Cell', Name="HOOK", DataType="282").text = "1"
