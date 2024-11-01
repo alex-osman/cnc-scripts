@@ -37,7 +37,7 @@ def generate_xlmst_file(directory):
     if not run_number:
         return
     
-    output_filename = os.path.join(directory, f"RUN_{run_number:02}.xmlst")
+    output_filename = os.path.normpath(os.path.join(directory, f"RUN_{run_number:02}.xmlst"))
     
     root = ET.Element('List')
 
