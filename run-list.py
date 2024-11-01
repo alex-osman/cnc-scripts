@@ -1,13 +1,21 @@
-# Updates - L/H/Thickness from each file, indicies need to increment, error if not all the same
-
-# 3rd line has l/w/thickness
-
 import os
 
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
 from tkinter import Tk, filedialog
 import re
+
+
+real_computer_base_path = "G:\\.shortcut-targets-by-id\\0B3FEOP395MGKbXlxdXdURm1YVjA"
+old_base_path = "G:\\My Drive\\Loubier Design"
+
+
+def replace_path_prefix(filepath, old_prefix, new_prefix):
+    # Check if the old prefix is in the filepath
+    if old_prefix in filepath:
+        # Replace the part before "ACTIVE" with the new prefix
+        return filepath.replace(old_prefix, new_prefix, 1)
+    return filepath
 
 
 def extract_dimensions_from_file(filepath):
@@ -34,13 +42,14 @@ def add_footer(root):
 def generate_xlmst_file(directory):
     filename_input = input("Enter a filename for the output (without extension): ")
     output_filename = os.path.normpath(os.path.join(directory, f"{filename_input}.xmlst"))
+    updated_output_filename = replace_path_prefix(output_filename, old_base_path, real_computer_base_path)
 
     print(f"Output File: {output_filename}")
     
     root = ET.Element('List')
 
-        # Create the Rows element with the specified attributes
-    rows = ET.SubElement(root, 'Rows', Name=filename_input, Repetitions="1", TL="0", TH="0", TS="0", Criterion="", ThicknessSpoilBoardLeft="15.5", ThicknessSpoilBoardRight="19", ThicknessPodsOnSpoilBoard="54", EnabledSpoilBoardLeft="1", EnabledSpoilBoardRight="1")
+    # Create the Rows element with the specified attributes
+    rows = ET.SubElement(root, 'Rows', Name=updated_output_filename, Repetitions="1", TL="0", TH="0", TS="0", Criterion="", ThicknessSpoilBoardLeft="15.5", ThicknessSpoilBoardRight="19", ThicknessPodsOnSpoilBoard="54", EnabledSpoilBoardLeft="1", EnabledSpoilBoardRight="1")
     index = 1
 
     # Iterate over files in the specified directory
@@ -49,8 +58,10 @@ def generate_xlmst_file(directory):
             print(f"Processing: {filename}")
             # // update the index
             normalized_filename = os.path.normpath(os.path.join(directory, filename))
+            updated_filename = replace_path_prefix(normalized_filename, old_base_path, real_computer_base_path)
 
-            row = ET.SubElement(rows, 'Row', Index=str(index), SavedID="13", FileName=normalized_filename)
+
+            row = ET.SubElement(rows, 'Row', Index=str(index), SavedID="13", FileName=updated_filename)
             index += 1
 
             length, height, thickness = extract_dimensions_from_file(normalized_filename)
@@ -61,7 +72,7 @@ def generate_xlmst_file(directory):
             # Add cells
             ET.SubElement(row, 'Cell', Name="DRAW", DataType="281").text = "1"
             ET.SubElement(row, 'Cell', Name="ESEC", DataType="165").text = "1"
-            ET.SubElement(row, 'Cell', Name="NAME", DataType="161").text = normalized_filename
+            ET.SubElement(row, 'Cell', Name="NAME", DataType="161").text = updated_filename
             ET.SubElement(row, 'Cell', Name="REPETITIONS", DataType="164").text = "1"
             ET.SubElement(row, 'Cell', Name="EXECUTED", DataType="288").text = "0"
 
