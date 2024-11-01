@@ -16,15 +16,21 @@ def add_footer(root):
 
 # This can throw an error
 def get_run_number(directory):
+    run_numbers = set()  # To store unique run numbers
+    
     for filename in os.listdir(directory):
         if filename.lower().endswith(".tcn"):
             run_number = int(filename[1:3])
-            return run_number
-        
-    if not run_number:
-        print("No .tcn files found in the specified directory.")
-        # throw an error
-        return
+            run_numbers.add(run_number)
+    
+    if not run_numbers:
+        raise ValueError("No .tcn files found in the specified directory.")
+    
+    if len(run_numbers) > 1:
+        raise ValueError(f"Multiple run numbers found: {run_numbers}")
+    
+    # Return the single run number if only one is found
+    return run_numbers.pop()
 
 def generate_xlmst_file(directory):
     run_number = get_run_number(directory)
@@ -37,13 +43,15 @@ def generate_xlmst_file(directory):
 
         # Create the Rows element with the specified attributes
     rows = ET.SubElement(root, 'Rows', Name=output_filename, Repetitions="1", TL="0", TH="0", TS="0", Criterion="", ThicknessSpoilBoardLeft="15.5", ThicknessSpoilBoardRight="19", ThicknessPodsOnSpoilBoard="150", EnabledSpoilBoardLeft="1", EnabledSpoilBoardRight="1")
-    
+    index = 1
+
     # Iterate over files in the specified directory
     for filename in os.listdir(directory):
         print(f"Processing: {filename}")
         if filename.lower().endswith(".tcn"):
             # // update the index
-            row = ET.SubElement(rows, 'Row', Index="1", SavedID="3", FileName=filename)
+            row = ET.SubElement(rows, 'Row', Index=str(index), SavedID="3", FileName=filename)
+            index += 1
 
             # Add cells
             ET.SubElement(row, 'Cell', Name="DRAW", DataType="281").text = "1"
