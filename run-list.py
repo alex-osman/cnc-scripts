@@ -1,5 +1,10 @@
 # Updates - L/H/Thickness from each file, indicies need to increment, error if not all the same number
 
+# 3rd line has l/w/thickness
+
+# dont worry about multiple run numbers
+# name the file on the spot instead of after the run number
+
 import os
 
 import xml.etree.ElementTree as ET
@@ -34,10 +39,11 @@ def get_run_number(directory):
 
 def generate_xlmst_file(directory):
     run_number = get_run_number(directory)
-    if not run_number:
-        return
+    print(f"Run Number: {run_number}")
     
     output_filename = os.path.normpath(os.path.join(directory, f"RUN_{run_number:02}.xmlst"))
+
+    print(f"Output File: {output_filename}")
     
     root = ET.Element('List')
 
@@ -111,6 +117,8 @@ def main():
     if not directory_path:
         print("No directory selected.")
         return
+    
+    print(f"Selected Directory")
 
     generate_xlmst_file(directory_path)
 
